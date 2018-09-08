@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t slavalab/multi-front-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run slavalab/multi-front-test npm test -- --coverage
+
+after_success:
+  - docker build -t slavalab/multi-test-client ./client
+  - docker build -t slavalab/multi-test-nginx ./nginx
+  - docker build -t slavalab/multi-test-api ./server
+  - docker build -t slavalab/multi-test-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push slavalab/multi-test-client
+  - docker push slavalab/multi-test-nginx
+  - docker push slavalab/multi-test-api
+  - docker push slavalab/multi-test-worker
